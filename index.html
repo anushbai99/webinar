@@ -560,6 +560,11 @@
         // ==================== API CALLS (CORS-FIXED) ====================
         async function registerUser(name, phone) {
             try {
+                // Validate backend URL is configured
+                if (CONFIG.BACKEND_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL') {
+                    throw new Error('Backend URL not configured. Please update CONFIG.BACKEND_URL');
+                }
+
                 // Use GET request with query parameters for Google Apps Script
                 const params = new URLSearchParams({
                     action: 'register',
@@ -567,37 +572,76 @@
                     phone: phone
                 });
 
-                const response = await fetch(`${CONFIG.BACKEND_URL}?${params.toString()}`, {
+                const url = `${CONFIG.BACKEND_URL}?${params.toString()}`;
+                console.log('Registration URL:', url);
+
+                const response = await fetch(url, {
                     method: 'GET',
                     redirect: 'follow'
                 });
 
-                const data = await response.json();
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+
+                const text = await response.text();
+                console.log('Response text:', text);
+
+                const data = JSON.parse(text);
+                console.log('Parsed data:', data);
+                
                 return data;
             } catch (error) {
-                console.error('Registration error:', error);
-                throw new Error('Unable to connect to server. Please try again.');
+                console.error('Registration error details:', error);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                throw new Error(error.message || 'Unable to connect to server. Please try again.');
             }
         }
 
         async function loginUser(phone) {
             try {
+                // Validate backend URL is configured
+                if (CONFIG.BACKEND_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL') {
+                    throw new Error('Backend URL not configured. Please update CONFIG.BACKEND_URL');
+                }
+
                 // Use GET request with query parameters for Google Apps Script
                 const params = new URLSearchParams({
                     action: 'login',
                     phone: phone
                 });
 
-                const response = await fetch(`${CONFIG.BACKEND_URL}?${params.toString()}`, {
+                const url = `${CONFIG.BACKEND_URL}?${params.toString()}`;
+                console.log('Login URL:', url);
+
+                const response = await fetch(url, {
                     method: 'GET',
                     redirect: 'follow'
                 });
 
-                const data = await response.json();
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+
+                const text = await response.text();
+                console.log('Response text:', text);
+
+                const data = JSON.parse(text);
+                console.log('Parsed data:', data);
+                
                 return data;
             } catch (error) {
-                console.error('Login error:', error);
-                throw new Error('Unable to connect to server. Please try again.');
+                console.error('Login error details:', error);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                throw new Error(error.message || 'Unable to connect to server. Please try again.');
             }
         }
 
@@ -702,5 +746,4 @@
         init();
     </script>
 </body>
-
 </html>
