@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Webinar Registration</title>
     <style>
         * {
@@ -433,7 +436,7 @@
             PORTAL_URL: 'https://portal.digitalacademy360.com/edmingleliveclass/join?token=vz1ATTSOlktuOc6e',
             
             // Webinar timing (IST format: YYYY-MM-DDTHH:MM:SS+05:30)
-            WEBINAR_START: '2025-11-15T07:05:00+05:30', // Change this
+            WEBINAR_START: '2025-11-15T11:00:00+05:30', // Change this
             WEBINAR_END: '2025-11-15T13:30:00+05:30',   // Change this
         };
 
@@ -518,8 +521,9 @@
         }
 
         // ==================== UI STATE MANAGEMENT ====================
-        function updateUI() {
-            const state = getWebinarState();
+        function updateUI(forceState = null) {
+            // Use forceState if provided, otherwise calculate current state
+            const state = forceState || getWebinarState();
 
             // Hide all sections first
             elements.registrationForm.style.display = 'none';
@@ -527,6 +531,7 @@
             elements.sessionEnded.style.display = 'none';
             elements.countdownContainer.style.display = 'none';
             elements.statusBox.style.display = 'none';
+            elements.statusBox.classList.remove('live', 'ended');
             elements.messageContainer.innerHTML = '';
 
             switch (state) {
@@ -730,27 +735,46 @@
             const state = getWebinarState();
             // Allow registration switch during LIVE or BEFORE_START states
             if (state === 'LIVE' || state === 'BEFORE_START') {
+                // Hide login form and show registration form
                 elements.loginForm.style.display = 'none';
                 elements.registrationForm.style.display = 'block';
+                elements.statusBox.style.display = 'block';
                 elements.headerSubtitle.textContent = 'Register Now';
+                
+                // Update status message for live registration
+                if (state === 'LIVE') {
+                    elements.statusBox.classList.add('live');
+                    elements.statusMessage.textContent = '🔴 Register now to join the live webinar!';
+                }
+                
                 elements.messageContainer.innerHTML = '';
             }
         });
 
         // ==================== INITIALIZATION ====================
+        let currentDisplayState = null; // Track what we're currently showing
+        
         function init() {
             updateUI();
+            currentDisplayState = getWebinarState();
             
             // Update countdown every second
             setInterval(() => {
                 const state = getWebinarState();
-                if (state === 'BEFORE_START') {
+                
+                // Only update UI if the state has actually changed OR if we're in countdown mode
+                if (state !== currentDisplayState) {
+                    // State changed (e.g., from BEFORE_START to LIVE)
+                    currentDisplayState = state;
+                    updateUI();
+                } else if (state === 'BEFORE_START') {
+                    // Just update the countdown without resetting the entire UI
                     const countdownActive = updateCountdown();
                     if (!countdownActive) {
-                        updateUI(); // Refresh UI when countdown ends
+                        // Countdown ended, refresh UI
+                        currentDisplayState = getWebinarState();
+                        updateUI();
                     }
-                } else if (state === 'LIVE' || state === 'ENDED') {
-                    updateUI(); // Check for state changes
                 }
             }, 1000);
         }
@@ -760,4 +784,3 @@
     </script>
 </body>
 </html>
-
